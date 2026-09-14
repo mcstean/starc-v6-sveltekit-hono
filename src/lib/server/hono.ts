@@ -1,9 +1,25 @@
 import { Hono } from 'hono';
 import type { Env } from '$lib/db';
+
+import { env as railwayEnv } from './env';
 import { getShippingRate, getCustomsRate, computeCBM, nextReceiptNumber, upsertCustomer } from '$lib/db';
 import { sendWhatsApp, alertAdmin, logWhatsApp } from '$lib/whatsapp';
 
+
+import { env as railwayEnv } from './env';
+
 export const app = new Hono<{ Bindings: Env }>();
+
+
+
+
+app.use('*', async (c, next) => {
+  if (!c.env || !(c.env as any).DB) {
+    (c as any).env = railwayEnv;
+  }
+  await next();
+});
+
 
 app.use('*', async (c, next) => {
   c.header('Access-Control-Allow-Origin', '*');
