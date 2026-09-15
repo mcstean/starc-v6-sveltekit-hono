@@ -1,6 +1,8 @@
 import { app } from '$lib/server/hono';
-import { env } from '$lib/server/env';
-const fallback = async ({ request }: any) => app.fetch(request, env);
+
+const fallback = ({ request, platform }: any) =>
+  app.fetch(request, (platform?.env ?? {}) as Record<string, any>);
+
 export const GET = fallback;
 export const POST = fallback;
 export const PUT = fallback;

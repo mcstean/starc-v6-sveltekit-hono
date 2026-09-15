@@ -1,12 +1,26 @@
 {
   "name": "starc-v6-sveltekit-hono",
   "type": "module",
-  "scripts": { "dev": "vite dev", "build": "vite build" },
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build"
+  },
   "devDependencies": {
+    "@cloudflare/workerd-linux-64": "file:../Downloads/workerd-linux-64.tgz",
     "@sveltejs/adapter-cloudflare": "^4.7.3",
     "@sveltejs/kit": "^2.16.0",
-    "svelte": "^4.2.19",
-    "vite": "^5.4.8"
+    "@sveltejs/vite-plugin-svelte": "^4.0.4",
+    "autoprefixer": "file:../Downloads/tw-autoprefixer.tgz",
+    "postcss": "file:../Downloads/tw-postcss.tgz",
+    "svelte": "^5.57.0",
+    "tailwindcss": "file:../Downloads/tw-tailwindcss.tgz",
+    "vite": "^5.4.8",
+    "wrangler": "^3.114.17"
   },
-  "dependencies": { "hono": "^4.6.0", "pg": "^8.12.0", "qrcode": "^1.5.3", "jspdf": "^2.5.1" }
+  "dependencies": {
+    "@neondatabase/serverless": "file:../Downloads/neon-serverless.tgz",
+    "hono": "^4.6.0",
+    "jspdf": "^2.5.1",
+    "qrcode": "^1.5.3"
+  }
 }
