@@ -1,17 +1,12 @@
 {
   "name": "starc-v6-sveltekit-hono",
   "type": "module",
-  "scripts": { "dev": "vite dev", "build": "vite build", "preview": "vite preview" },
+  "scripts": { "dev": "vite dev", "build": "vite build" },
   "devDependencies": {
-    "@sveltejs/adapter-cloudflare": "^4.29.1",
+    "@sveltejs/adapter-cloudflare": "^4.7.3",
     "@sveltejs/kit": "^2.16.0",
     "svelte": "^4.2.19",
     "vite": "^5.4.8"
   },
-  "dependencies": {
-    "hono": "^4.6.0",
-    "pg": "^8.12.0",
-    "qrcode": "^1.5.3",
-    "jspdf": "^2.5.1"
-  }
+  "dependencies": { "hono": "^4.6.0", "pg": "^8.12.0", "qrcode": "^1.5.3", "jspdf": "^2.5.1" }
 }
