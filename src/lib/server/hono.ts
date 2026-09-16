@@ -74,6 +74,77 @@ app.get('/api/groups', async (c) => {
   } catch { return c.json([]); }
 });
 
+app.post('/api/orders', async (c) => {
+  try {
+    const body = await c.req.json() as any;
+    const DB = c.get('runtime').DB!;
+
+    if (!body?.items?.length) {
+      return c.json({ error: 'Panier vide' }, 400);
+    }
+    if (!body.customer_name || !body.customer_phone) {
+      return c.json({ error: 'Nom et téléphone obligatoires' }, 400);
+    }
+
+    // Generate unique receipt number STARC-YYYY-NNNN
+    const year = new Date().getFullYear();
+    const prefix = `STARC-${year}-`;
+    const countRow: any = await DB.prepare(
+      'SELECT COUNT(*) as c FROM preorder_orders WHERE receipt_number LIKE ?'
+    ).bind(`${prefix}%`).first();
+    const nextNum = (countRow?.c || 0) + 1;
+    const receiptNumber = `${prefix}${String(nextNum).padStart(4, '0')}`;
+
+    const now = new Date().toISOString();
+
+    // Insert one row per item, all sharing the same receipt_number
+    for (const item of body.items) {
+      const id = crypto.randomUUID();
+      await DB.prepare(
+        `INSERT INTO preorder_orders (
+          id, product_id, customer_name, customer_phone,
+          quantity, unit_price_snapshot,
+          delivery_fee, total_xaf,
+          deposit_paid, remaining_xaf,
+          payment_mode, payment_status,
+          delivery_mode, delivery_address,
+          receipt_number, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        id,
+        item.product_id || null,
+        body.customer_name,
+        body.customer_phone,
+        item.qty || 1,
+        item.unit_price || 0,
+        body.shipping_fee || 0,
+        (item.unit_price || 0) * (item.qty || 1),
+        body.deposit_paid || 0,
+        body.remaining || 0,
+        body.payment_mode || 'DEPOSIT_30',
+        'PENDING',
+        body.delivery_mode || 'pickup',
+        body.delivery_address || '',
+        receiptNumber,
+        'PENDING',
+        now
+      ).run();
+    }
+
+    return c.json({
+      success: true,
+      receipt_number: receiptNumber,
+      total: body.total_price || 0,
+      deposit: body.deposit_paid || 0,
+      remaining: body.remaining || 0,
+      items_count: body.items.length,
+      created_at: now
+    });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur lors de la création de la commande', detail: e?.message }, 500);
+  }
+});
+
 app.get('/api/dashboard/stats', async (c) => {
   const empty = { leads: 0, orders: 0, revenue: 0, customers: 0, low_stock: 0, open_groups: 0 };
   try {
