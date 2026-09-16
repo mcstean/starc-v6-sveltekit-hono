@@ -42,6 +42,20 @@ app.get('/api/products', async (c) => {
   } catch { return c.json([]); }
 });
 
+app.get('/api/products/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const p = await c.get('runtime').DB!
+      .prepare('SELECT * FROM products WHERE id = ?')
+      .bind(id)
+      .first();
+    if (!p) return c.json({ error: 'Produit introuvable' }, 404);
+    return c.json(p);
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
 app.get('/api/services', async (c) => {
   try {
     const r = await c.get('runtime').DB!

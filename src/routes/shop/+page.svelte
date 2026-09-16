@@ -39,12 +39,10 @@
     loading = false;
   });
 
-  const countFor = (tab: string) => {
-    if (tab === 'all') return allProducts.length;
-    if (tab === 'instock') return allProducts.filter(p => p.is_instock).length;
-    if (tab === 'preorder') return allProducts.filter(p => p.is_preorder).length;
-    return 0;
-  };
+  // Compteurs réactifs (fix bug : Svelte ne traquait pas les dépendances internes)
+  $: countAll = allProducts.length;
+  $: countInstock = allProducts.filter(p => p.is_instock).length;
+  $: countPreorder = allProducts.filter(p => p.is_preorder).length;
 </script>
 
 <svelte:head>
@@ -75,21 +73,21 @@
         on:click={() => activeTab = 'all'}
         class="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all {activeTab === 'all' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}">
         Tout
-        <span class="px-1.5 py-0.5 rounded-full text-[10px] {activeTab === 'all' ? 'bg-white/20' : 'bg-slate-200'}">{countFor('all')}</span>
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] {activeTab === 'all' ? 'bg-white/20' : 'bg-slate-200'}">{countAll}</span>
       </button>
       <button
         on:click={() => activeTab = 'instock'}
         class="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all {activeTab === 'instock' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100'}">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
         INSTOCK · Akwa
-        <span class="px-1.5 py-0.5 rounded-full text-[10px] {activeTab === 'instock' ? 'bg-white/20' : 'bg-slate-200'}">{countFor('instock')}</span>
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] {activeTab === 'instock' ? 'bg-white/20' : 'bg-slate-200'}">{countInstock}</span>
       </button>
       <button
         on:click={() => activeTab = 'preorder'}
         class="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all {activeTab === 'preorder' ? 'bg-amber-500 text-white' : 'text-slate-600 hover:bg-slate-100'}">
         <span>✈</span>
         Précommande Njangui
-        <span class="px-1.5 py-0.5 rounded-full text-[10px] {activeTab === 'preorder' ? 'bg-white/20' : 'bg-slate-200'}">{countFor('preorder')}</span>
+        <span class="px-1.5 py-0.5 rounded-full text-[10px] {activeTab === 'preorder' ? 'bg-white/20' : 'bg-slate-200'}">{countPreorder}</span>
       </button>
     </div>
   </div>
