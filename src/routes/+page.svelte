@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   let groups: any[] = [];
   let services: any[] = [];
-  let hero: any = { title: '', subtitle: '', cta1_text: '', cta1_link: '/shop', cta2_text: '', cta2_link: '/preorder' };
+  let hero: any = { title: 'Achetez en gros depuis la Turquie, la Chine, Dubai.', subtitle: 'Rejoignez nos groupages hebdomadaires et réduisez vos coûts de transport.', cta1_text: 'Voir les groupes ouverts', cta1_link: '/shop', cta2_text: 'Comment ça marche', cta2_link: '/preorder' };
   let form = { name: '', phone: '', email: '', service: '', message: '' };
   let sent = false;
   onMount(async () => {

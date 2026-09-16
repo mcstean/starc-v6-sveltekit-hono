@@ -16,8 +16,8 @@ app.use('*', async (c, next) => {
 const DEFAULT_HERO = {
   title: 'Achetez en gros depuis la Turquie, la Chine, Dubai.',
   subtitle: 'Rejoignez nos groupages hebdomadaires et réduisez vos coûts de transport.',
-  cta_primary: 'Voir les groupes ouverts',
-  cta_secondary: 'Comment ça marche'
+  cta1_text: 'Voir les groupes ouverts',
+  cta2_text: 'Comment ça marche'
 };
 
 app.get('/api/health', (c) => c.json({ ok: true, ts: Date.now() }));
