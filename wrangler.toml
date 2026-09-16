@@ -6,3 +6,8 @@ compatibility_flags = ["nodejs_compat"]
 [assets]
 binding = "ASSETS"
 directory = ".svelte-kit/cloudflare"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "starc_db"
+database_id = "abcf198e-a738-4758-80d9-267be42f476e"

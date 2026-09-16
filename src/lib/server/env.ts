@@ -1,25 +1,15 @@
-import { createDb } from './pg';
+import type { DbBinding } from './db';
 import { createKV } from './kv';
 import { createFiles } from './files';
 
-const NOOP_DB: any = {
-  prepare: () => ({
-    bind: () => ({
-      first: async () => null,
-      all: async () => ({ results: [] }),
-      run: async () => ({ meta: { last_row_id: null }, success: true })
-    })
-  })
-};
 const NOOP_KV = {
-  get: async (_: string) => null,
-  put: async (_: string, __: string) => {}
+  get: async (_: string): Promise<string | null> => null,
+  put: async (_: string, __: string): Promise<void> => {}
 };
 
 export function createEnv(bindings: Record<string, any>) {
-  const hasDb = !!bindings.DATABASE_URL;
-  const db = hasDb ? createDb(bindings.DATABASE_URL) : NOOP_DB;
-  const kv = hasDb ? createKV(db) : NOOP_KV;
+  const db = bindings.DB as DbBinding | undefined;
+  const kv = db ? createKV(db) : NOOP_KV;
   const files = createFiles(bindings);
   return {
     DB: db,
