@@ -80,25 +80,4 @@ app.get('/api/dashboard/stats', async (c) => {
 });
 
 
-app.get('/api/debug/products', async (c) => {
-  const DB = c.get('runtime').DB;
-  if (!DB) return c.json({ ok: false, error: 'DB binding missing' }, 500);
-  try {
-    const r: any = await DB.prepare('SELECT * FROM products LIMIT 100').all();
-    return c.json({
-      ok: true,
-      results_count: r?.results?.length ?? 'undefined',
-      raw_keys: Object.keys(r ?? {}),
-      first_row: r?.results?.[0] ?? null,
-    });
-  } catch (e: any) {
-    return c.json({
-      ok: false,
-      error_message: e?.message ?? String(e),
-      error_name: e?.name,
-      error_stack: String(e?.stack ?? '').split('\n').slice(0, 8),
-    }, 500);
-  }
-});
-
 app.all('*', (c) => c.json({ error: 'Not found', path: c.req.path }, 404));
