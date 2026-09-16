@@ -142,16 +142,16 @@
         </div>
         <div class="flex justify-between items-center mb-3">
           <span class="text-sm text-slate-600">Total commande</span>
-          <span class="text-sm font-black text-slate-900">{formatXAF(total)} XAF</span>
+          <span class="text-sm font-black text-slate-900">{formatXAF(orderSuccess.total || 0)} XAF</span>
         </div>
         <div class="flex justify-between items-center mb-3">
           <span class="text-sm text-slate-600">Acompte à verser</span>
-          <span class="text-lg font-black text-[#3B9AE1]">{formatXAF(deposit)} XAF</span>
+          <span class="text-lg font-black text-[#3B9AE1]">{formatXAF(orderSuccess.deposit || 0)} XAF</span>
         </div>
-        {#if remaining > 0}
+        {#if (orderSuccess.remaining || 0) > 0}
           <div class="flex justify-between items-center">
             <span class="text-sm text-slate-600">Reste à payer</span>
-            <span class="text-sm font-bold text-slate-700">{formatXAF(remaining)} XAF</span>
+            <span class="text-sm font-bold text-slate-700">{formatXAF(orderSuccess.remaining || 0)} XAF</span>
           </div>
         {/if}
       </div>
@@ -159,7 +159,7 @@
       <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 text-left">
         <h3 class="text-sm font-black text-amber-900 mb-2">📱 Prochaine étape : le paiement</h3>
         <p class="text-xs text-amber-800 leading-relaxed">
-          Pour confirmer votre commande, envoyez l'acompte de <strong>{formatXAF(deposit)} XAF</strong> au numéro suivant :
+          Pour confirmer votre commande, envoyez l'acompte de <strong>{formatXAF(orderSuccess.deposit || 0)} XAF</strong> au numéro suivant :
         </p>
         <div class="mt-3 space-y-1.5 text-xs text-amber-900">
           <div class="flex items-center gap-2">
