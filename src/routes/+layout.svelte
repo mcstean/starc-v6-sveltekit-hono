@@ -7,7 +7,9 @@
 
 <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-    <a href="/" class="font-bold text-xl text-brand">STARC<span class="text-brand-accent">.CM</span></a>
+    <a href="/" class="flex items-center gap-2">
+      <img src="/logo-starc.png" alt="STARC Enterprise" class="h-9 w-auto">
+    </a>
     <nav class="hidden md:flex gap-6 text-sm font-medium">
       <a href="/shop" class="hover:text-brand-accent">Shop</a>
       <a href="/services" class="hover:text-brand-accent">Services</a>
