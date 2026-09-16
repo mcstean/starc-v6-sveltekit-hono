@@ -86,7 +86,7 @@ app.post('/api/orders', async (c) => {
       return c.json({ error: 'Nom et téléphone obligatoires' }, 400);
     }
 
-    // Generate unique receipt number STARC-YYYY-NNNN
+    // Génère un numéro de reçu unique STARC-YYYY-NNNN
     const year = new Date().getFullYear();
     const prefix = `STARC-${year}-`;
     const countRow: any = await DB.prepare(
@@ -97,21 +97,20 @@ app.post('/api/orders', async (c) => {
 
     const now = new Date().toISOString();
 
-    // Insert one row per item, all sharing the same receipt_number
+    // Un INSERT par ligne du panier — même receipt_number pour toutes
+    // On n'insère PAS l'id (SQLite l'auto-génère car INTEGER PRIMARY KEY AUTOINCREMENT)
     for (const item of body.items) {
-      const id = crypto.randomUUID();
       await DB.prepare(
         `INSERT INTO preorder_orders (
-          id, product_id, customer_name, customer_phone,
+          product_id, customer_name, customer_phone,
           quantity, unit_price_snapshot,
           delivery_fee, total_xaf,
           deposit_paid, remaining_xaf,
           payment_mode, payment_status,
           delivery_mode, delivery_address,
           receipt_number, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
-        id,
         item.product_id || null,
         body.customer_name,
         body.customer_phone,
@@ -141,7 +140,11 @@ app.post('/api/orders', async (c) => {
       created_at: now
     });
   } catch (e: any) {
-    return c.json({ error: 'Erreur lors de la création de la commande', detail: e?.message }, 500);
+    return c.json({
+      error: 'Erreur lors de la création de la commande',
+      detail: e?.message ?? String(e),
+      stack: String(e?.stack ?? '').split('\n').slice(0, 5)
+    }, 500);
   }
 });
 
