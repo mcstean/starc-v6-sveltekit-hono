@@ -1,0 +1,25 @@
+name = "starc-cms"
+main = ".open-next/worker.js"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env", "enable_nodejs_http_server_modules"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "starc_cms_db"
+database_id = "2cc8e844-3ad8-4d58-9606-c4ea2cc285f3"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "starc-cms-media"
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
