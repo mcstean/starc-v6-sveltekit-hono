@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
 import { createEnv } from './env';
 
 type Variables = { runtime: ReturnType<typeof createEnv> };
@@ -257,6 +258,191 @@ app.post('/api/cart-leads', async (c) => {
       cartJson, totalXaf, itemsCount, body.stage || 'contact', now, now
     ).run();
     return c.json({ success: true, action: 'created', session_id: body.session_id });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
+// ═══════════ AUTH ═══════════
+app.post('/api/auth/login', async (c) => {
+  try {
+    const body = await c.req.json() as any;
+    const phone = String(body.phone || '').replace(/\D/g, '');
+    const name = String(body.name || '').trim();
+
+    if (phone.length < 8) return c.json({ error: 'Numéro invalide' }, 400);
+
+    const DB = c.get('runtime').DB!;
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30j
+
+    // Cherche ou crée le client
+    let customer: any = await DB.prepare('SELECT * FROM customers WHERE phone = ?').bind(phone).first();
+    let isNew = false;
+
+    if (!customer) {
+      if (!name) return c.json({ error: 'Nom requis pour créer un compte', needs_name: true }, 400);
+      const referralCode = 'STARC-' + phone.slice(-4) + Math.random().toString(36).slice(2, 5).toUpperCase();
+      const res: any = await DB.prepare(
+        `INSERT INTO customers (name, phone, referral_code, created_at) VALUES (?, ?, ?, ?)`
+      ).bind(name, phone, referralCode, now).run();
+      const newId = res.meta?.last_row_id;
+      customer = await DB.prepare('SELECT * FROM customers WHERE id = ?').bind(newId).first();
+      isNew = true;
+    } else if (name && !customer.name) {
+      await DB.prepare('UPDATE customers SET name = ? WHERE id = ?').bind(name, customer.id).run();
+      customer.name = name;
+    }
+
+    // Crée la session
+    const token = crypto.randomUUID();
+    await DB.prepare('INSERT INTO sessions (token, phone, expires_at) VALUES (?, ?, ?)')
+      .bind(token, phone, expiresAt).run();
+
+    setCookie(c, 'starc_session', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Lax',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60
+    });
+
+    return c.json({
+      success: true,
+      is_new: isNew,
+      customer: {
+        id: customer.id,
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
+        kobo_balance: customer.kobo_balance,
+        referral_code: customer.referral_code
+      }
+    });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
+app.get('/api/auth/me', async (c) => {
+  try {
+    const token = getCookie(c, 'starc_session');
+    if (!token) return c.json({ error: 'Non connecté' }, 401);
+
+    const DB = c.get('runtime').DB!;
+    const session: any = await DB.prepare(
+      'SELECT phone, expires_at FROM sessions WHERE token = ?'
+    ).bind(token).first();
+
+    if (!session) return c.json({ error: 'Session invalide' }, 401);
+    if (new Date(session.expires_at) < new Date()) {
+      await DB.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run();
+      return c.json({ error: 'Session expirée' }, 401);
+    }
+
+    const customer: any = await DB.prepare('SELECT * FROM customers WHERE phone = ?').bind(session.phone).first();
+    if (!customer) return c.json({ error: 'Client introuvable' }, 401);
+
+    return c.json({
+      id: customer.id,
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      kobo_balance: customer.kobo_balance || 0,
+      referral_code: customer.referral_code,
+      total_orders: customer.total_orders || 0,
+      total_spent: customer.total_spent || 0,
+      created_at: customer.created_at
+    });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
+app.post('/api/auth/logout', async (c) => {
+  try {
+    const token = getCookie(c, 'starc_session');
+    if (token) {
+      const DB = c.get('runtime').DB!;
+      await DB.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run();
+    }
+    deleteCookie(c, 'starc_session', { path: '/' });
+    return c.json({ success: true });
+  } catch {
+    return c.json({ success: true });
+  }
+});
+
+// ═══════════ MY ACCOUNT ═══════════
+app.get('/api/my/orders', async (c) => {
+  try {
+    const token = getCookie(c, 'starc_session');
+    if (!token) return c.json({ error: 'Non connecté' }, 401);
+
+    const DB = c.get('runtime').DB!;
+    const session: any = await DB.prepare('SELECT phone FROM sessions WHERE token = ?').bind(token).first();
+    if (!session) return c.json({ error: 'Session invalide' }, 401);
+
+    const rows: any = await DB.prepare(
+      `SELECT o.*, p.product_name, p.image_url
+       FROM preorder_orders o
+       LEFT JOIN products p ON o.product_id = p.id
+       WHERE o.customer_phone = ?
+       ORDER BY o.created_at DESC`
+    ).bind(session.phone).all();
+
+    // Groupe par receipt_number
+    const grouped: Record<string, any> = {};
+    for (const r of rows?.results || []) {
+      const key = r.receipt_number || `row-${r.id}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          receipt_number: r.receipt_number,
+          status: r.status,
+          payment_status: r.payment_status,
+          payment_mode: r.payment_mode,
+          delivery_mode: r.delivery_mode,
+          created_at: r.created_at,
+          total: 0, deposit: 0, remaining: 0,
+          items: []
+        };
+      }
+      grouped[key].total += r.total_xaf || 0;
+      grouped[key].deposit += r.deposit_paid || 0;
+      grouped[key].remaining += r.remaining_xaf || 0;
+      grouped[key].items.push({
+        product_id: r.product_id,
+        product_name: r.product_name,
+        image_url: r.image_url,
+        quantity: r.quantity,
+        unit_price: r.unit_price_snapshot
+      });
+    }
+
+    return c.json(Object.values(grouped));
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
+app.get('/api/my/kobo', async (c) => {
+  try {
+    const token = getCookie(c, 'starc_session');
+    if (!token) return c.json({ error: 'Non connecté' }, 401);
+
+    const DB = c.get('runtime').DB!;
+    const session: any = await DB.prepare('SELECT phone FROM sessions WHERE token = ?').bind(token).first();
+    if (!session) return c.json({ error: 'Session invalide' }, 401);
+
+    const customer: any = await DB.prepare('SELECT kobo_balance FROM customers WHERE phone = ?').bind(session.phone).first();
+    const txns: any = await DB.prepare(
+      'SELECT * FROM kobo_transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 20'
+    ).bind(String(customer?.id || '')).all();
+
+    return c.json({
+      balance: customer?.kobo_balance || 0,
+      transactions: txns?.results || []
+    });
   } catch (e: any) {
     return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
   }
