@@ -556,4 +556,152 @@ app.get('/api/sourcing-requests', async (c) => {
   }
 });
 
+// ═══════════ ADMIN ═══════════
+const ADMIN_PASSWORD = 'STARC2026!';
+const ADMIN_COOKIE = 'starc_admin';
+
+function checkAdmin(c: any): boolean {
+  const val = getCookie(c, ADMIN_COOKIE);
+  return val === ADMIN_PASSWORD;
+}
+
+app.post('/api/admin/login', async (c) => {
+  try {
+    const body = await c.req.json() as any;
+    if (body?.password !== ADMIN_PASSWORD) {
+      return c.json({ error: 'Mot de passe invalide' }, 401);
+    }
+    setCookie(c, ADMIN_COOKIE, ADMIN_PASSWORD, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Strict',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 // 7 jours
+    });
+    return c.json({ success: true });
+  } catch {
+    return c.json({ error: 'Erreur' }, 500);
+  }
+});
+
+app.post('/api/admin/logout', async (c) => {
+  deleteCookie(c, ADMIN_COOKIE, { path: '/' });
+  return c.json({ success: true });
+});
+
+app.get('/api/admin/check', async (c) => {
+  return c.json({ authenticated: checkAdmin(c) });
+});
+
+app.get('/api/admin/stats', async (c) => {
+  if (!checkAdmin(c)) return c.json({ error: 'Non autorisé' }, 401);
+  try {
+    const DB = c.get('runtime').DB!;
+
+    const [
+      ordersCount, customersCount, sourcingCount, abandonedCount,
+      ordersRevenue, cartLeadsValue, recentOrders, recentSourcing
+    ] = await Promise.all([
+      DB.prepare('SELECT COUNT(DISTINCT receipt_number) as c FROM preorder_orders').first(),
+      DB.prepare('SELECT COUNT(*) as c FROM customers').first(),
+      DB.prepare("SELECT COUNT(*) as c FROM sourcing_requests WHERE status = 'new'").first(),
+      DB.prepare('SELECT COUNT(*) as c FROM cart_leads').first(),
+      DB.prepare('SELECT SUM(deposit_paid) as s FROM preorder_orders').first(),
+      DB.prepare('SELECT SUM(total_xaf) as s FROM cart_leads').first(),
+      DB.prepare('SELECT receipt_number, customer_name, total_xaf, deposit_paid, status, created_at FROM preorder_orders ORDER BY created_at DESC LIMIT 5').all(),
+      DB.prepare('SELECT id, customer_phone, product_wanted, status, created_at FROM sourcing_requests ORDER BY created_at DESC LIMIT 5').all()
+    ]) as any[];
+
+    return c.json({
+      stats: {
+        total_orders: (ordersCount as any)?.c || 0,
+        total_customers: (customersCount as any)?.c || 0,
+        new_sourcing: (sourcingCount as any)?.c || 0,
+        abandoned_carts: (abandonedCount as any)?.c || 0,
+        total_revenue: (ordersRevenue as any)?.s || 0,
+        abandoned_value: (cartLeadsValue as any)?.s || 0
+      },
+      recent_orders: (recentOrders as any)?.results || [],
+      recent_sourcing: (recentSourcing as any)?.results || []
+    });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur', detail: e?.message }, 500);
+  }
+});
+
+app.get('/api/admin/sourcing-leads', async (c) => {
+  if (!checkAdmin(c)) return c.json({ error: 'Non autorisé' }, 401);
+  try {
+    const DB = c.get('runtime').DB!;
+    const rows: any = await DB.prepare(
+      'SELECT * FROM sourcing_requests ORDER BY created_at DESC LIMIT 200'
+    ).all();
+    return c.json(rows?.results || []);
+  } catch (e: any) {
+    return c.json({ error: 'Erreur', detail: e?.message }, 500);
+  }
+});
+
+app.get('/api/admin/cart-leads', async (c) => {
+  if (!checkAdmin(c)) return c.json({ error: 'Non autorisé' }, 401);
+  try {
+    const DB = c.get('runtime').DB!;
+    const rows: any = await DB.prepare(
+      "SELECT * FROM cart_leads WHERE customer_phone != '' ORDER BY last_activity_at DESC LIMIT 200"
+    ).all();
+    return c.json(rows?.results || []);
+  } catch (e: any) {
+    return c.json({ error: 'Erreur', detail: e?.message }, 500);
+  }
+});
+
+app.get('/api/admin/orders', async (c) => {
+  if (!checkAdmin(c)) return c.json({ error: 'Non autorisé' }, 401);
+  try {
+    const DB = c.get('runtime').DB!;
+    const rows: any = await DB.prepare(
+      `SELECT o.*, p.product_name, p.image_url
+       FROM preorder_orders o
+       LEFT JOIN products p ON o.product_id = p.id
+       ORDER BY o.created_at DESC
+       LIMIT 300`
+    ).all();
+
+    // Group by receipt
+    const grouped: Record<string, any> = {};
+    for (const r of rows?.results || []) {
+      const key = r.receipt_number || `row-${r.id}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          receipt_number: r.receipt_number,
+          customer_name: r.customer_name,
+          customer_phone: r.customer_phone,
+          status: r.status,
+          payment_status: r.payment_status,
+          payment_mode: r.payment_mode,
+          delivery_mode: r.delivery_mode,
+          delivery_address: r.delivery_address,
+          created_at: r.created_at,
+          total: 0, deposit: 0, remaining: 0,
+          items: []
+        };
+      }
+      grouped[key].total += r.total_xaf || 0;
+      grouped[key].deposit += r.deposit_paid || 0;
+      grouped[key].remaining += r.remaining_xaf || 0;
+      grouped[key].items.push({
+        product_id: r.product_id,
+        product_name: r.product_name,
+        image_url: r.image_url,
+        quantity: r.quantity,
+        unit_price: r.unit_price_snapshot
+      });
+    }
+
+    return c.json(Object.values(grouped));
+  } catch (e: any) {
+    return c.json({ error: 'Erreur', detail: e?.message }, 500);
+  }
+});
+
 app.all('*', (c) => c.json({ error: 'Not found', path: c.req.path }, 404));
