@@ -6,6 +6,8 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 
+const { env } = await getCloudflareContext({ async: true })
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -17,7 +19,7 @@ export default buildConfig({
     outputFile: './src/payload-types.ts',
   },
   db: sqliteD1Adapter({
-    binding: (getCloudflareContext().env as any).DB,
+    binding: (env as any).DB,
     push: true,
   }),
 })
