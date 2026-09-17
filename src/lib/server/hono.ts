@@ -497,4 +497,63 @@ app.get('/api/track/by-phone/:phone', async (c) => {
   }
 });
 
+app.post('/api/sourcing-requests', async (c) => {
+  try {
+    const body = await c.req.json() as any;
+    const phone = String(body.customer_phone || '').replace(/\D/g, '');
+    const product = String(body.product_wanted || '').trim();
+
+    if (phone.length < 8) return c.json({ error: 'Numéro invalide' }, 400);
+    if (!product) return c.json({ error: 'Produit requis' }, 400);
+
+    const DB = c.get('runtime').DB!;
+    const now = new Date().toISOString();
+
+    // Ajoute le nom du demandeur dans la description si fourni
+    let description = String(body.description || '');
+    if (body.customer_name) {
+      description = `Demandeur: ${body.customer_name}\n${description}`;
+    }
+
+    const res: any = await DB.prepare(
+      `INSERT INTO sourcing_requests (
+        customer_phone, product_wanted, description, budget,
+        files_json, status, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      phone,
+      product,
+      description,
+      body.budget ? Number(body.budget) : null,
+      '[]',
+      'new',
+      now
+    ).run();
+
+    const newId = res.meta?.last_row_id;
+    const ref = 'SRC-' + String(newId || Date.now()).padStart(6, '0');
+
+    return c.json({
+      success: true,
+      id: ref,
+      row_id: newId,
+      created_at: now
+    });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
+app.get('/api/sourcing-requests', async (c) => {
+  try {
+    const DB = c.get('runtime').DB!;
+    const rows: any = await DB.prepare(
+      'SELECT * FROM sourcing_requests ORDER BY created_at DESC LIMIT 100'
+    ).all();
+    return c.json(rows?.results || []);
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
 app.all('*', (c) => c.json({ error: 'Not found', path: c.req.path }, 404));
