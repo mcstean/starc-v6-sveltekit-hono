@@ -448,4 +448,53 @@ app.get('/api/my/kobo', async (c) => {
   }
 });
 
+app.get('/api/track/by-phone/:phone', async (c) => {
+  try {
+    const phone = String(c.req.param('phone') || '').replace(/\D/g, '');
+    if (phone.length < 8) return c.json({ error: 'Numéro invalide' }, 400);
+
+    const DB = c.get('runtime').DB!;
+    const rows: any = await DB.prepare(
+      'SELECT * FROM preorder_orders WHERE customer_phone = ? ORDER BY created_at DESC'
+    ).bind(phone).all();
+
+    if (!rows?.results?.length) {
+      return c.json({ orders: [] });
+    }
+
+    // Groupe par receipt_number
+    const grouped: Record<string, any> = {};
+    for (const r of rows.results) {
+      const key = r.receipt_number || `row-${r.id}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          receipt_number: r.receipt_number,
+          status: r.status,
+          payment_status: r.payment_status,
+          payment_mode: r.payment_mode,
+          delivery_mode: r.delivery_mode,
+          customer_name: r.customer_name,
+          customer_phone: r.customer_phone,
+          created_at: r.created_at,
+          total: 0, deposit: 0, remaining: 0,
+          items: []
+        };
+      }
+      grouped[key].total += r.total_xaf || 0;
+      grouped[key].deposit += r.deposit_paid || 0;
+      grouped[key].remaining += r.remaining_xaf || 0;
+      grouped[key].items.push({
+        product_id: r.product_id,
+        quantity: r.quantity,
+        unit_price: r.unit_price_snapshot,
+        line_total: r.total_xaf
+      });
+    }
+
+    return c.json({ orders: Object.values(grouped) });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
 app.all('*', (c) => c.json({ error: 'Not found', path: c.req.path }, 404));

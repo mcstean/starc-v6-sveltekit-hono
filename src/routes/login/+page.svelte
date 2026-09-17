@@ -40,19 +40,19 @@
         {needsName ? 'Un dernier détail pour finaliser votre inscription.' : 'Entrez votre numéro pour accéder à votre espace.'}
       </p>
     </div>
-    <form on:submit={submit} class="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-slate-200">
+    <form on:submit={submit} autocomplete="on" class="bg-white rounded-2xl p-6 md:p-8 shadow-xl border border-slate-200">
       <div class="mb-5">
         <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Numéro WhatsApp</label>
         <div class="flex">
           <span class="inline-flex items-center px-3 bg-slate-100 border border-r-0 border-slate-200 rounded-l-lg text-sm font-bold text-slate-600">🇨🇲 +237</span>
-          <input type="tel" bind:value={phone} placeholder="699 12 34 56" autocomplete="tel" disabled={needsName}
+          <input type="tel" name="customer_phone" bind:value={phone} placeholder="699 12 34 56" autocomplete="tel-national" inputmode="numeric" disabled={needsName}
             class="flex-1 px-3 py-3 rounded-r-lg bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B9AE1] focus:border-transparent disabled:opacity-60">
         </div>
       </div>
       {#if needsName}
         <div class="mb-5">
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Nom complet</label>
-          <input type="text" bind:value={name} placeholder="Ex: Marie Ngono" autocomplete="name"
+          <input type="text" name="customer_name" bind:value={name} placeholder="Ex: Marie Ngono" autocomplete="name" autocapitalize="words"
             class="w-full px-3 py-3 rounded-lg bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#3B9AE1] focus:border-transparent">
           <p class="text-[10px] text-slate-500 mt-1.5">Ce nom apparaîtra sur vos reçus.</p>
         </div>
