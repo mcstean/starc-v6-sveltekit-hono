@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { cart } from '$lib/stores';
+  import { addToCart } from '$lib/stores';
   import { goto } from '$app/navigation';
 
   let product: any = null;
@@ -46,22 +46,14 @@
     loading = false;
   });
 
-  function addToCart() {
-    cart.update((items: any[]) => {
-      const existing = items.findIndex(i => i.product?.id === product.id);
-      if (existing >= 0) {
-        const copy = [...items];
-        copy[existing] = { ...copy[existing], qty: copy[existing].qty + qty };
-        return copy;
-      }
-      return [...items, { product, qty }];
-    });
+  function handleAddToCart() {
+    addToCart(product, qty);
     addedFeedback = true;
     setTimeout(() => (addedFeedback = false), 2000);
   }
 
   function buyNow() {
-    addToCart();
+    addToCart(product, qty);
     setTimeout(() => goto('/checkout'), 300);
   }
 </script>
@@ -248,7 +240,7 @@
 
           <!-- CTAs -->
           <div class="flex flex-col sm:flex-row gap-3 mb-6">
-            <button on:click={addToCart}
+            <button on:click={handleAddToCart}
               class="flex-1 py-3.5 rounded-xl {addedFeedback ? 'bg-emerald-600' : 'bg-slate-900 hover:bg-slate-800'} text-white font-bold text-sm transition-colors flex items-center justify-center gap-2">
               {#if addedFeedback}
                 ✓ Ajouté au panier

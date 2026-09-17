@@ -7,6 +7,20 @@
   let submitting = false;
   let orderSuccess: any = null;
   let formError = '';
+  let sessionId = '';
+  let lastSaveHash = '';
+  let saveTimer: any;
+
+  // ─── Session ID persistant (identifie le visiteur) ───
+  function getOrCreateSessionId(): string {
+    if (typeof localStorage === 'undefined') return '';
+    let sid = localStorage.getItem('starc_session_id');
+    if (!sid) {
+      sid = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem('starc_session_id', sid);
+    }
+    return sid;
+  }
 
   // Form
   let form = {
@@ -25,11 +39,59 @@
 
   // Subscribe to cart
   onMount(() => {
+    sessionId = getOrCreateSessionId();
     const unsub = cart.subscribe((c: any[]) => {
       items = c || [];
     });
     return unsub;
   });
+
+  // ─── Sauvegarde du lead (dès que le client commence à remplir) ───
+  function scheduleSave() {
+    if (!sessionId || items.length === 0) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveLead, 900);
+  }
+
+  async function saveLead() {
+    if (!sessionId || items.length === 0) return;
+    const hasContact = !!(form.customer_name || form.customer_phone);
+    if (!hasContact) return;
+
+    try {
+      await fetch('/api/cart-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          customer_name: form.customer_name,
+          customer_phone: form.customer_phone,
+          customer_email: form.customer_email,
+          items: items.map((i: any) => ({
+            product_id: i.product?.id,
+            name: i.product?.product_name,
+            qty: i.qty,
+            unit_price: i.product?.unit_price_xaf
+          })),
+          total_xaf: subtotal + shippingFee,
+          stage: form.payment_method ? 'payment' : (form.delivery_mode ? 'delivery' : 'contact')
+        })
+      });
+    } catch {}
+  }
+
+  // Surveille les changements du formulaire et du panier
+  $: {
+    const hash = JSON.stringify({
+      n: form.customer_name, p: form.customer_phone, e: form.customer_email,
+      dm: form.delivery_mode, da: form.delivery_address, pm: form.payment_mode,
+      pm2: form.payment_method, cnt: items.length, tot: subtotal
+    });
+    if (hash !== lastSaveHash) {
+      lastSaveHash = hash;
+      if (sessionId && items.length > 0) scheduleSave();
+    }
+  }
 
   // Computed totals
   $: subtotal = items.reduce((s, i) => s + ((i.product?.unit_price_xaf || 0) * (i.qty || 0)), 0);
@@ -91,7 +153,8 @@
         deposit_percent: form.payment_mode === 'DEPOSIT_30' ? 30 : 100,
         weight_total_kg: totalWeight,
         cbm_total: totalCbm,
-        order_type: 'INSTOCK_SALE'
+        order_type: 'INSTOCK_SALE',
+        session_id: sessionId
       };
 
       const r = await fetch('/api/orders', {
@@ -104,6 +167,8 @@
         const data = await r.json();
         orderSuccess = data;
         cart.set([]);
+        // Redirection vers la page reçu (permet de revenir après refresh)
+        setTimeout(() => goto('/receipt/' + data.receipt_number), 400);
       } else {
         const err = await r.json().catch(() => ({}));
         formError = err.error || 'Erreur lors de la commande. Réessayez.';

@@ -130,6 +130,13 @@ app.post('/api/orders', async (c) => {
       ).run();
     }
 
+    // Supprime le cart lead associé (la commande est confirmée)
+    if (body.session_id) {
+      try {
+        await DB.prepare('DELETE FROM cart_leads WHERE session_id = ?').bind(body.session_id).run();
+      } catch {}
+    }
+
     return c.json({
       success: true,
       receipt_number: receiptNumber,
@@ -167,5 +174,92 @@ app.get('/api/dashboard/stats', async (c) => {
   } catch { return c.json(empty); }
 });
 
+
+// ───── Récupère un reçu par numéro (STARC-YYYY-NNNN) ─────
+app.get('/api/receipts/:receipt', async (c) => {
+  try {
+    const receiptNumber = c.req.param('receipt');
+    const DB = c.get('runtime').DB!;
+    const rows: any = await DB.prepare(
+      'SELECT * FROM preorder_orders WHERE receipt_number = ? ORDER BY id ASC'
+    ).bind(receiptNumber).all();
+
+    if (!rows?.results?.length) {
+      return c.json({ error: 'Reçu introuvable' }, 404);
+    }
+
+    const first = rows.results[0];
+    const items = rows.results.map((r: any) => ({
+      product_id: r.product_id,
+      quantity: r.quantity,
+      unit_price: r.unit_price_snapshot,
+      line_total: r.total_xaf,
+      deposit_paid: r.deposit_paid,
+      remaining: r.remaining_xaf
+    }));
+
+    return c.json({
+      receipt_number: first.receipt_number,
+      customer_name: first.customer_name,
+      customer_phone: first.customer_phone,
+      delivery_mode: first.delivery_mode,
+      delivery_address: first.delivery_address,
+      payment_mode: first.payment_mode,
+      payment_status: first.payment_status,
+      status: first.status,
+      created_at: first.created_at,
+      items,
+      items_count: items.length,
+      total: rows.results.reduce((sum: number, r: any) => sum + (r.total_xaf || 0), 0),
+      deposit: rows.results.reduce((sum: number, r: any) => sum + (r.deposit_paid || 0), 0),
+      remaining: rows.results.reduce((sum: number, r: any) => sum + (r.remaining_xaf || 0), 0)
+    });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
+
+// ───── Upsert un cart lead (panier en cours) ─────
+app.post('/api/cart-leads', async (c) => {
+  try {
+    const body = await c.req.json() as any;
+    const DB = c.get('runtime').DB!;
+    if (!body?.session_id) return c.json({ error: 'session_id requis' }, 400);
+
+    const now = new Date().toISOString();
+    const existing: any = await DB.prepare(
+      'SELECT id FROM cart_leads WHERE session_id = ?'
+    ).bind(body.session_id).first();
+
+    const cartJson = JSON.stringify(body.items || []);
+    const totalXaf = body.total_xaf || 0;
+    const itemsCount = (body.items || []).length;
+
+    if (existing?.id) {
+      await DB.prepare(
+        `UPDATE cart_leads SET customer_name=?, customer_phone=?, customer_email=?,
+         cart_json=?, total_xaf=?, items_count=?, stage=?, last_activity_at=?
+         WHERE session_id=?`
+      ).bind(
+        body.customer_name || '', body.customer_phone || '', body.customer_email || '',
+        cartJson, totalXaf, itemsCount, body.stage || 'contact', now, body.session_id
+      ).run();
+      return c.json({ success: true, action: 'updated', session_id: body.session_id });
+    }
+
+    await DB.prepare(
+      `INSERT INTO cart_leads (id, session_id, customer_name, customer_phone, customer_email,
+       cart_json, total_xaf, items_count, stage, last_activity_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      crypto.randomUUID(), body.session_id,
+      body.customer_name || '', body.customer_phone || '', body.customer_email || '',
+      cartJson, totalXaf, itemsCount, body.stage || 'contact', now, now
+    ).run();
+    return c.json({ success: true, action: 'created', session_id: body.session_id });
+  } catch (e: any) {
+    return c.json({ error: 'Erreur serveur', detail: e?.message }, 500);
+  }
+});
 
 app.all('*', (c) => c.json({ error: 'Not found', path: c.req.path }, 404));
