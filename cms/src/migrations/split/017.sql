@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `payload_kv_key_idx` ON `payload_kv` (`key`);

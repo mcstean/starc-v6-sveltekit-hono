@@ -1,0 +1,1 @@
+CREATE INDEX `payload_migrations_updated_at_idx` ON `payload_migrations` (`updated_at`);

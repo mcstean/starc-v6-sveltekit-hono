@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `media_filename_idx` ON `media` (`filename`);

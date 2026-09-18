@@ -1,0 +1,1 @@
+CREATE INDEX `users_sessions_parent_id_idx` ON `users_sessions` (`_parent_id`);

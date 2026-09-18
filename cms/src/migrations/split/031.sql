@@ -1,0 +1,1 @@
+CREATE INDEX `payload_preferences_updated_at_idx` ON `payload_preferences` (`updated_at`);

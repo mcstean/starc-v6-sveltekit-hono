@@ -1,0 +1,1 @@
+CREATE INDEX `media_created_at_idx` ON `media` (`created_at`);

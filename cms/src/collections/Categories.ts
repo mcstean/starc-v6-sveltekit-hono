@@ -1,0 +1,2 @@
+import type { CollectionConfig } from 'payload'
+export const Categories: CollectionConfig = { slug: 'categories', admin: { useAsTitle: 'name', group: '03 - E-commerce' }, access: { read: () => true, create: ({ req }: any) => req.user?.role !== 'guest-demo', update: ({ req }: any) => req.user?.role !== 'guest-demo', delete: ({ req }: any) => ['super-admin','admin'].includes(req.user?.role) }, fields: [{ name: 'name', type: 'text', required: true }, { name: 'slug', type: 'text', required: true, unique: true }, { name: 'description', type: 'textarea' }] }

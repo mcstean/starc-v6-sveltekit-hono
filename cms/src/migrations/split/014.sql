@@ -1,0 +1,1 @@
+CREATE INDEX `pages_updated_at_idx` ON `pages` (`updated_at`);

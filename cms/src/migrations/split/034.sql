@@ -1,0 +1,1 @@
+CREATE INDEX `payload_preferences_rels_order_idx` ON `payload_preferences_rels` (`order`);

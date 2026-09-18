@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `pages_slug_idx` ON `pages` (`slug`);

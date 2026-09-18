@@ -1,0 +1,1 @@
+CREATE INDEX `payload_preferences_key_idx` ON `payload_preferences` (`key`);
