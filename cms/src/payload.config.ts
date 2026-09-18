@@ -23,6 +23,4 @@ export default buildConfig({
   collections: [Admins, Users, Media, Pages, Categories, Products, Orders, Courses, Lessons, Enrollments],
   secret: process.env.PAYLOAD_SECRET || 'CHANGE_ME_32_CHARS_MINIMUM_123456789012',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
-  // @ts-expect-error - Workers needs false
-  sharp: false as any,
 })
