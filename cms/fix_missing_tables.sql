@@ -1,1 +1,11 @@
--- paste content from the file above
+CREATE TABLE IF NOT EXISTS admins (id TEXT PRIMARY KEY, name TEXT, email TEXT NOT NULL UNIQUE, role TEXT DEFAULT 'collaborator', bio TEXT, salt TEXT, hash TEXT, created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS admins_sessions (id TEXT PRIMARY KEY, _order INTEGER, _parent_id TEXT, created_at TEXT, expires_at TEXT);
+CREATE TABLE IF NOT EXISTS categories (id TEXT PRIMARY KEY, name TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, description TEXT, created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, description TEXT, price REAL, stock REAL DEFAULT 0, category_id TEXT, status TEXT DEFAULT 'draft', created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, customer_id TEXT NOT NULL, total REAL NOT NULL, status TEXT DEFAULT 'pending', created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS courses (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, description TEXT NOT NULL, excerpt TEXT, instructor_id TEXT, price REAL DEFAULT 0, level TEXT DEFAULT 'beginner', status TEXT DEFAULT 'draft', created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS lessons (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, course_id TEXT NOT NULL, _order REAL DEFAULT 0, content TEXT NOT NULL, video_url TEXT, is_preview INTEGER DEFAULT 0, created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS enrollments (id TEXT PRIMARY KEY, student_id TEXT NOT NULL, course_id TEXT NOT NULL, progress REAL DEFAULT 0, completed INTEGER DEFAULT 0, enrolled_at TEXT, created_at TEXT, updated_at TEXT);
+CREATE INDEX IF NOT EXISTS admins_email_idx ON admins(email);
+CREATE INDEX IF NOT EXISTS courses_slug_idx ON courses(slug);
+CREATE INDEX IF NOT EXISTS lessons_course_idx ON lessons(course_id);
