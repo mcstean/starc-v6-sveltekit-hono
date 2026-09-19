@@ -1,11 +1,9 @@
 name = "starc-cms"
-main = ".open-next/worker.js"
-compatibility_date = "2025-09-18"
-compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env", "enable_nodejs_http_server_modules"]
+compatibility_date = "2025-09-19"
+compatibility_flags = ["nodejs_compat"]
 
-[assets]
-directory = ".open-next/assets"
-binding = "ASSETS"
+[build]
+command = "npm run build:cf"
 
 [[d1_databases]]
 binding = "DB"
@@ -18,8 +16,3 @@ bucket_name = "starc-cms-media"
 
 [observability]
 enabled = true
-
-[observability.logs]
-enabled = true
-head_sampling_rate = 1
-persist = true
