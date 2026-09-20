@@ -1,0 +1,152 @@
+2026-09-20T01:28:16.822545 === Detecting local AI models ===
+2026-09-20T01:28:16.823090 $ ollama list 2>&1
+2026-09-20T01:28:16.894777 NAME                                ID              SIZE      MODIFIED     
+qwen2.5-coder:latest                dae161e27b0e    4.7 GB    8 weeks ago     
+qwen2.5vl:3b                        fb90415cde1e    3.2 GB    2 months ago    
+llama3.2:latest                     a80c4f17acd5    2.0 GB    2 months ago    
+phi3:mini                           4f2222927938    2.2 GB    2 months ago    
+qwen2.5-coder:1.5b                  d7372fd82851    986 MB    2 months ago    
+qwen2.5-coder:3b                    f72c60cabf62    1.9 GB    2 months ago    
+qwen2.5-coder:7b-instruct-q4_K_M    dae161e27b0e    4.7 GB    2 months ago    
+nomic-embed-text:latest             0a109f422b47    274 MB    2 months ago    
+qwen2.5-coder:7b                    dae161e27b0e    4.7 GB    2 months ago    
+qwen2.5:7b                          845dbda0ea48    4.7 GB    2 months ago    
+
+2026-09-20T01:28:16.895020 $ lm-studio --help
+2026-09-20T01:28:16.899482 $ llama --help
+2026-09-20T01:28:16.903254 $ python3 -m gpt4all --help
+2026-09-20T01:28:16.979757 Models detected: ['ollama', 'qwen2.5-coder:latest', 'qwen2.5vl:3b', 'llama3.2:latest', 'phi3:mini', 'qwen2.5-coder:1.5b', 'qwen2.5-coder:3b', 'qwen2.5-coder:7b-instruct-q4_K_M', 'nomic-embed-text:latest', 'qwen2.5-coder:7b', 'qwen2.5:7b']
+2026-09-20T01:28:17.440060 STARC Heal starting in /home/mcsteann/starc-v6-sveltekit-hono/cms
+2026-09-20T01:28:17.440727 Time: 2026-09-20 01:28:17.440364
+2026-09-20T01:28:17.441165 
+=== PHASE 1: Fixing configs ===
+2026-09-20T01:28:17.452735 Wrote /home/mcsteann/starc-v6-sveltekit-hono/cms/wrangler.toml
+2026-09-20T01:28:17.453163   - Updated compatibility_date to 2025-09-20
+2026-09-20T01:28:17.459454 Media.ts OK
+2026-09-20T01:28:17.462138 payload.config.ts OK
+2026-09-20T01:28:17.465365 Pinning drizzle-orm 0.38.3 (was ) - fixes this.client.prepare
+2026-09-20T01:28:17.465831 Missing @payloadcms/storage-r2
+2026-09-20T01:28:17.467847 .env exists: /home/mcsteann/starc-v6-sveltekit-hono/cms/.env
+2026-09-20T01:28:17.469096 
+=== PHASE 2: Building ===
+2026-09-20T01:28:17.469612 Cleaning .open-next .next .wrangler
+2026-09-20T01:28:17.474588 Removed .open-next
+2026-09-20T01:28:17.546746 Removed .next
+2026-09-20T01:28:17.556137 Removed .wrangler
+2026-09-20T01:28:17.556619 === Running npm run build:cf ===
+2026-09-20T01:28:17.556954 $ npm run build:cf
+2026-09-20T01:30:02.060154 Build FAILED
+2026-09-20T01:30:02.061661 Build failed - attempting auto-fix
+2026-09-20T01:30:02.062085 Build still failing - check .heal.log
+2026-09-20T01:30:02.062512 
+=== PHASE 3: Testing local dev ===
+2026-09-20T01:30:02.062925 
+--- Test attempt 1/3 ---
+2026-09-20T01:30:02.063314 === Testing wrangler dev --local ===
+2026-09-20T01:30:50.271487 Server did not become Ready in 90s
+2026-09-20T01:30:50.284364 Test failed: not_ready
+2026-09-20T01:30:50.285060 Unknown failure - check logs
+2026-09-20T01:30:50.285916 
+--- Test attempt 2/3 ---
+2026-09-20T01:30:50.286376 === Testing wrangler dev --local ===
+2026-09-20T01:31:49.503516 Server did not become Ready in 90s
+2026-09-20T01:31:49.509288 Test failed: not_ready
+2026-09-20T01:31:49.509744 Unknown failure - check logs
+2026-09-20T01:31:49.510294 
+--- Test attempt 3/3 ---
+2026-09-20T01:31:49.510647 === Testing wrangler dev --local ===
+2026-09-20T01:32:55.312416 Server did not become Ready in 90s
+2026-09-20T01:32:55.317077 Test failed: not_ready
+2026-09-20T01:32:55.317427 Unknown failure - check logs
+2026-09-20T01:32:55.318102 
+❌ Failed after 3 attempts - see /home/mcsteann/starc-v6-sveltekit-hono/cms/.heal.log
+2026-09-20T01:32:55.772313 STARC Heal starting in /home/mcsteann/starc-v6-sveltekit-hono/cms
+2026-09-20T01:32:55.772556 Time: 2026-09-20 01:32:55.772424
+2026-09-20T01:32:55.772708 
+=== PHASE 1: Fixing configs ===
+2026-09-20T01:32:55.773742 wrangler.toml already OK
+2026-09-20T01:32:55.776989 Media.ts OK
+2026-09-20T01:32:55.777530 payload.config.ts OK
+2026-09-20T01:32:55.778091 Pinning drizzle-orm 0.38.3 (was ) - fixes this.client.prepare
+2026-09-20T01:32:55.778308 Missing @payloadcms/storage-r2
+2026-09-20T01:32:55.779296 .env exists: /home/mcsteann/starc-v6-sveltekit-hono/cms/.env
+2026-09-20T01:32:55.780074 
+=== PHASE 2: Building ===
+2026-09-20T01:32:55.780270 Cleaning .open-next .next .wrangler
+2026-09-20T01:32:55.782394 Removed .open-next
+2026-09-20T01:32:55.810543 Removed .next
+2026-09-20T01:32:55.810964 === Running npm run build:cf ===
+2026-09-20T01:32:55.811113 $ npm run build:cf
+2026-09-20T01:34:41.225013 Build FAILED
+2026-09-20T01:34:41.229523 Build failed - attempting auto-fix
+2026-09-20T01:34:41.230817 $ ollama run llama3.1 -p "You are a Payload CMS + Cloudflare Workers expert. Analyze this error and give 1-line fix:
+
+
+> starc-cms@0.1.0 build:cf
+> opennextjs-cloudflare build
+
+
+┌─────────────────────────────┐
+│ OpenNext — Cloudflare build │
+└─────────────────────────────┘
+
+App directory: /home/mcsteann/starc-v6-sveltekit-hono/cms
+Next.js version : 15.4.11
+@opennextjs/cloudflare version: 1.20.6
+@opennextjs/aws version: 4.1.4
+
+┌─────────────────────────────────┐
+│ OpenNext — Building Next.js app │
+└───────────────────────" 2>&1 | head -20
+2026-09-20T01:34:41.389958 AI suggestion: Error: unknown shorthand flag: 'p' in -p
+
+2026-09-20T01:34:41.390310 Build still failing - check .heal.log
+2026-09-20T01:34:41.390612 
+=== PHASE 3: Testing local dev ===
+2026-09-20T01:34:41.391264 
+--- Test attempt 1/3 ---
+2026-09-20T01:34:41.391633 === Testing wrangler dev --local ===
+2026-09-20T01:35:47.300556 Server did not become Ready in 90s
+2026-09-20T01:35:47.307447 Test failed: not_ready
+2026-09-20T01:35:47.307837 Unknown failure - check logs
+2026-09-20T01:35:47.310231 $ ollama run llama3.1 -p "You are a Payload CMS + Cloudflare Workers expert. Analyze this error and give 1-line fix:
+
+d_process:916:11)\n' +
+        '    at Object.execSync (node:child_process:988:15)\n' +
+        '    at buildNextjsApp (file:///home/mcsteann/starc-v6-sveltekit-hono/cms/node_modules/@opennextjs/aws/dist/build/buildNextApp.js:15:8)\n' +
+        '    at build (file:///home/mcsteann/starc-v6-sveltekit-hono/cms/node_modules/@opennextjs/cloudflare/dist/cli/build/build.js:64:9)\n' +
+        '    at async build" 2>&1 | head -20
+2026-09-20T01:35:47.478129 AI suggestion: Error: unknown shorthand flag: 'p' in -p
+
+2026-09-20T01:35:47.478717 
+--- Test attempt 2/3 ---
+2026-09-20T01:35:47.479103 === Testing wrangler dev --local ===
+2026-09-20T01:36:42.634696 Server did not become Ready in 90s
+2026-09-20T01:36:42.639249 Test failed: not_ready
+2026-09-20T01:36:42.639533 Unknown failure - check logs
+2026-09-20T01:36:42.642085 $ ollama run llama3.1 -p "You are a Payload CMS + Cloudflare Workers expert. Analyze this error and give 1-line fix:
+
+d_process:916:11)\n' +
+        '    at Object.execSync (node:child_process:988:15)\n' +
+        '    at buildNextjsApp (file:///home/mcsteann/starc-v6-sveltekit-hono/cms/node_modules/@opennextjs/aws/dist/build/buildNextApp.js:15:8)\n' +
+        '    at build (file:///home/mcsteann/starc-v6-sveltekit-hono/cms/node_modules/@opennextjs/cloudflare/dist/cli/build/build.js:64:9)\n' +
+        '    at async build" 2>&1 | head -20
+2026-09-20T01:36:42.892012 AI suggestion: Error: unknown shorthand flag: 'p' in -p
+
+2026-09-20T01:36:42.892545 
+--- Test attempt 3/3 ---
+2026-09-20T01:36:42.892883 === Testing wrangler dev --local ===
+2026-09-20T01:37:36.122805 Server did not become Ready in 90s
+2026-09-20T01:37:36.128089 Test failed: not_ready
+2026-09-20T01:37:36.128520 Unknown failure - check logs
+2026-09-20T01:37:36.130325 $ ollama run llama3.1 -p "You are a Payload CMS + Cloudflare Workers expert. Analyze this error and give 1-line fix:
+
+d_process:916:11)\n' +
+        '    at Object.execSync (node:child_process:988:15)\n' +
+        '    at buildNextjsApp (file:///home/mcsteann/starc-v6-sveltekit-hono/cms/node_modules/@opennextjs/aws/dist/build/buildNextApp.js:15:8)\n' +
+        '    at build (file:///home/mcsteann/starc-v6-sveltekit-hono/cms/node_modules/@opennextjs/cloudflare/dist/cli/build/build.js:64:9)\n' +
+        '    at async build" 2>&1 | head -20
+2026-09-20T01:37:36.275517 AI suggestion: Error: unknown shorthand flag: 'p' in -p
+
+2026-09-20T01:37:36.275890 
+❌ Failed after 3 attempts - see /home/mcsteann/starc-v6-sveltekit-hono/cms/.heal.log
