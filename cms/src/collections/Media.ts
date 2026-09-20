@@ -1,2 +1,10 @@
-import type { CollectionConfig } from 'payload'
-export const Media: CollectionConfig = { slug: 'media', admin: { group: '02 - Content' }, upload: {}, access: { read: () => true, create: ({ req }: any) => req.user?.role !== 'guest-demo', update: ({ req }: any) => req.user?.role !== 'guest-demo', delete: ({ req }: any) => ['super-admin','admin'].includes(req.user?.role as string) }, fields: [{ name: 'alt', type: 'text', required: true }] }
+import { CollectionConfig } from 'payload'
+
+export const Media: CollectionConfig = {
+  slug: 'media',
+  access: { read: () => true },
+  fields: [{ name: 'alt', type: 'text' }],
+  upload: {
+    disableLocalStorage: true,
+  },
+}

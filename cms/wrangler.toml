@@ -1,6 +1,11 @@
 name = "starc-cms"
-compatibility_date = "2025-09-19"
+main = ".open-next/worker.js"
+compatibility_date = "2025-09-20"
 compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
 
 [build]
 command = "npm run build:cf"
